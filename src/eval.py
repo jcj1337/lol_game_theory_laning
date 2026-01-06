@@ -36,10 +36,11 @@ def evaluate(agent: QLearningAgent, env: LaneEnv, opponents: Dict[str, Policy], 
             if env.g > 0:
                 wins += 1
 
+        # set metrics in dict 
         out[name] = {
-            "Average Return (total_return/games)": total_return / games,
-            "Win Rate (wins/games)": wins / games,
-            "Action Frequency (SP, SH, F)": {ACTION_NAMES[a]: action_counts[a] for a in (SP, SH, F)},
+            "avg_return": total_return / games,
+            "win_rate": wins / games,
+            "action_freq": {ACTION_NAMES[a]: action_counts[a] for a in (SP, SH, F)},
         }
 
     agent.eps = old_eps
