@@ -56,7 +56,7 @@ class LaneEnv:
       w   in {-2,-1,0,1,2}
       m_self, m_opp in {0,1,2}
       v_self, v_opp in {0,1}
-      g in [-G, G]     (advantage = self - opp)
+      g in [-G, G]     (gd = self - opp)
       t timestep
     """
 
@@ -64,15 +64,14 @@ class LaneEnv:
         self.p = params
         self.reset()
 
-    # ---- observations (each player sees their own perspective) ----
+    # ---- observations ----
     def ss_you(self) -> state_ss:
         return (self.w, self.m_self, self.m_opp, self.v_self, self.v_opp, self.g)
 
     def ss_opp(self) -> state_ss:
-        # opponent sees mirrored wave and negated advantage
+        # mirrored for enemy
         return (-self.w, self.m_opp, self.m_self, self.v_opp, self.v_self, -self.g)
 
-    # ---- transition pieces ----
     def delta_w(self, a: int) -> int:
         if a == SP:
             return +1
@@ -84,7 +83,7 @@ class LaneEnv:
 
     def payoff_matrix(self, a: int, b: int) -> float:
         """
-        RPS-style:
+        Like rock paper scissors, e.g. 
           SH beats SP
           F beats SH
           SP beats F
@@ -157,35 +156,36 @@ class LaneEnv:
 
     # ---- step ----
     def step(self, a_self: int, a_opp: int):
-        # (1) wave transition (global, from self perspective)
+        # wave transition (global, from your perspective)
         raw_w_next = self.w + self.delta_w(a_self) - self.delta_w(a_opp)
         w_next = max(-2, min(2, raw_w_next))
 
-        # (2) perspectives
+        # set perspectives 
         w_self = self.w
         w_opp = -self.w
         w_next_self = w_next
         w_next_opp = -w_next
 
-        # (3) rewards
+        # set rewards
         r_self = self.reward(w_self, self.m_self, self.v_self, a_self, a_opp, w_next_self)
         r_opp = self.reward(w_opp, self.m_opp, self.v_opp, a_opp, a_self, w_next_opp)
 
-        # (4) advantage update
+        # set gold
         raw_g_next = self.g + (r_self - r_opp)
         g_next = max(-self.p.G, min(self.p.G, raw_g_next))
 
-        # (5) stacks
+        # set wave stacks
         self.m_self = self.update_stack(self.m_self, a_self, w_next_self)
         self.m_opp = self.update_stack(self.m_opp, a_opp, w_next_opp)
 
-        # apply updates + new vision
+        # apply updates to wave, gold, vision
         self.w = w_next
         self.g = g_next
         self.v_self = bernoulli(self.p.p_v)
         self.v_opp = bernoulli(self.p.p_v)
 
         self.t += 1
+        # done is our flag for episode termination
         done = (self.t >= self.p.T)
 
         return (self.ss_you(), self.ss_opp()), (r_self, r_opp), done

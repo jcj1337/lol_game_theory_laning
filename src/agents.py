@@ -21,7 +21,7 @@ class QLearningAgent:
         )
 
     def act(self, s: state_ss) -> int:
-        # epsilon-greedy
+        # e-greedy
         if random.random() < self.eps:
             return random.choice(self.actions)
 
@@ -38,8 +38,8 @@ class QLearningAgent:
 
     def snapshot_greedy_policy(self) -> Policy:
         """
-        Freeze the current greedy policy (based on a copy of Q)
-        so it can be used as a fixed opponent in the pool.
+        Freeze the current greedy policy (based on Q)
+        so it can be used as a new policy to be used by opponent agent
         """
         Q_copy = {k: v[:] for k, v in self.Q.items()}
         actions = self.actions[:]

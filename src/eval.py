@@ -9,7 +9,7 @@ ACTION_NAMES = {SP: "SP", SH: "SH", F: "F"}
 
 def evaluate(agent: QLearningAgent, env: LaneEnv, opponents: Dict[str, Policy], games: int = 200):
     old_eps = agent.eps
-    agent.eps = 0.0  # greedy evaluation
+    agent.eps = 0.0  
 
     out = {}
     for name, opp_pi in opponents.items():
@@ -32,14 +32,14 @@ def evaluate(agent: QLearningAgent, env: LaneEnv, opponents: Dict[str, Policy], 
                 obs_y, obs_o = obs_y2, obs_o2
 
             total_return += ep_return
-            # simple win proxy: final g > 0
+            
             if env.g > 0:
                 wins += 1
 
         out[name] = {
-            "avg_return": total_return / games,
-            "win_rate": wins / games,
-            "action_freq": {ACTION_NAMES[a]: action_counts[a] for a in (SP, SH, F)},
+            "Average Return (total_return/games)": total_return / games,
+            "Win Rate (wins/games)": wins / games,
+            "Action Frequency (SP, SH, F)": {ACTION_NAMES[a]: action_counts[a] for a in (SP, SH, F)},
         }
 
     agent.eps = old_eps
